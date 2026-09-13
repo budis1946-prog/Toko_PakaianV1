@@ -1,194 +1,417 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Toko Baju & Spreadsheet Database</title>
-    <script src="https://jsdelivr.net"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Toko Pakaian — Dashboard Produk</title>
     <style>
-        .product-card img { object-fit: cover; height: 200px; width: 100%; }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Inter, Arial, sans-serif;
+        background: #f5f6f8;
+        color: #171717;
+      }
+      header {
+        background: #111;
+        color: #fff;
+        padding: 18px 5%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .logo {
+        font-weight: 800;
+        font-size: 22px;
+      }
+      .logo span {
+        color: #aaa;
+      }
+      .wrap {
+        max-width: 1250px;
+        margin: auto;
+        padding: 30px 20px;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 20px;
+        margin-bottom: 22px;
+      }
+      .top h1 {
+        margin: 0 0 6px;
+        font-size: 32px;
+      }
+      .muted {
+        color: #737373;
+      }
+      button {
+        border: 0;
+        border-radius: 9px;
+        padding: 10px 15px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .primary {
+        background: #111;
+        color: white;
+      }
+      .light {
+        background: #e9eaed;
+      }
+      .danger {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+      .toolbar input {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 9px;
+      }
+      .table-wrap {
+        background: white;
+        border: 1px solid #e4e4e4;
+        border-radius: 14px;
+        overflow: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 14px;
+        border-bottom: 1px solid #eee;
+      }
+      th {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #737373;
+        background: #fafafa;
+      }
+      td {
+        font-size: 14px;
+      }
+      .actions {
+        display: flex;
+        gap: 7px;
+      }
+      .thumb {
+        width: 45px;
+        height: 55px;
+        border-radius: 7px;
+        object-fit: cover;
+        background: #eee;
+      }
+      .badge {
+        padding: 5px 8px;
+        border-radius: 20px;
+        background: #f0f0f0;
+        font-size: 12px;
+      }
+      .profit {
+        font-weight: 700;
+      }
+      .empty {
+        text-align: center;
+        padding: 50px;
+        color: #777;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: #0008;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 10;
+      }
+      .modal.show {
+        display: flex;
+      }
+      .box {
+        background: white;
+        width: min(600px, 100%);
+        max-height: 92vh;
+        overflow: auto;
+        border-radius: 15px;
+        padding: 23px;
+      }
+      .form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .full {
+        grid-column: 1/-1;
+      }
+      .form label {
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .form input,
+      .form select {
+        width: 100%;
+        margin-top: 6px;
+        padding: 11px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 15px;
+      }
+      .actions-bottom {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 20px;
+      }
+      #status {
+        font-size: 13px;
+      }
+      .ok {
+        color: #15803d;
+      }
+      .err {
+        color: #b91c1c;
+      }
+      @media (max-width: 650px) {
+        .top {
+          display: block;
+        }
+        .top button {
+          margin-top: 15px;
+        }
+        .form {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
-</head>
-<body class="bg-gray-100 p-6">
-    <div class="max-w-6xl mx-auto">
-        <header class="mb-6 flex justify-between items-center bg-white p-4 rounded-xl shadow-xs">
-            <h1 class="text-2xl font-bold text-gray-800">👕 Toko Baju Management</h1>
-            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition cursor-pointer">+ Tambah Produk</button>
-        </header>
-
-        <!-- Catalog List -->
-        <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <!-- Data produk dimasukkan via JS -->
+  </head>
+  <body>
+    <header>
+      <div class="logo">Style<span>Hub</span></div>
+      <div>Admin Produk</div>
+    </header>
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <h1>Master Produk</h1>
+          <div class="muted">
+            Database: Google Sheets · Sheet: Master_Produk
+          </div>
         </div>
+        <button class="primary" onclick="openAdd()">＋ Tambah Produk</button>
+      </div>
+      <div class="toolbar">
+        <input
+          id="search"
+          placeholder="Cari ID, nama, kategori..."
+          oninput="render()"
+        /><button class="light" onclick="loadProducts()">↻ Refresh</button>
+      </div>
+      <div id="status"></div>
+      <br />
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Gambar</th>
+              <th>ID</th>
+              <th>Nama</th>
+              <th>Kategori</th>
+              <th>Harga Beli</th>
+              <th>Harga Jual</th>
+              <th>Profit</th>
+              <th>Stok</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Modal Form (Tambah / Edit) -->
-    <div id="product-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
-            <h3 id="modal-title" class="text-xl font-bold mb-4">Tambah Produk Baju</h3>
-            <form id="product-form" onsubmit="saveProduct(event)">
-                <input type="hidden" id="prod-id">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Baju</label>
-                    <input type="text" id="prod-name" required class="w-full border p-2 rounded-lg">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                    <select id="prod-category" class="w-full border p-2 rounded-lg">
-                        <option value="Kaos">Kaos</option>
-                        <option value="Kemeja">Kemeja</option>
-                        <option value="Jaket">Jaket</option>
-                        <option value="Celana">Celana</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Harga Beli (Rp)</label>
-                        <input type="number" id="prod-cost" required class="w-full border p-2 rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Harga Jual (Rp)</label>
-                        <input type="number" id="prod-price" required class="w-full border p-2 rounded-lg">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Stok</label>
-                        <input type="number" id="prod-stock" required class="w-full border p-2 rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">URL Gambar</label>
-                        <input type="url" id="prod-image" placeholder="https://..." class="w-full border p-2 rounded-lg">
-                    </div>
-                </div>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button type="button" onclick="closeModal()" class="bg-gray-300 px-4 py-2 rounded-lg cursor-pointer">Batal</button>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer">Simpan</button>
-                </div>
-            </form>
-        </div>
+    <div
+      class="modal"
+      id="modal"
+      onclick="if (event.target === this) closeModal();"
+    >
+      <div class="box">
+        <h2 id="modalTitle">Tambah Produk</h2>
+        <form class="form" onsubmit="save(event)">
+          <input type="hidden" id="oldId" />
+          <label
+            >ID Produk<input id="id" required placeholder="PRD001"
+          /></label>
+          <label>Nama<input id="name" required /></label>
+          <label>Kategori<input id="category" required /></label>
+          <label
+            >Harga Beli<input id="buy" type="number" min="0" required
+          /></label>
+          <label
+            >Harga Jual<input id="sell" type="number" min="0" required
+          /></label>
+          <label>Stok<input id="stock" type="number" min="0" required /></label>
+          <label class="full"
+            >URL Gambar<input id="image" type="url" placeholder="https://..."
+          /></label>
+          <div class="actions-bottom full">
+            <button type="button" class="light" onclick="closeModal()">
+              Batal</button
+            ><button class="primary">Simpan</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <script>
-        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzY-WFVypkO1LWnKqf2Mg3HJpvkPpQ0z2awG4EH9_TWLbh9alVrlpBNSmLfr6cVa5KpQA/exec"; 
-        
-        let products = [];
-
-        async function fetchProducts() {
-            try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Catatan: no-cors membatasi pembacaan respon langsung, disarankan konfigurasi CORS di Apps Script lanjutan jika butuh validasi balik.
-                    body: JSON.stringify({ action: 'read' })
-                });
-                // Untuk kemudahan integrasi tanpa masalah CORS pra-setup ekstrim, 
-                // data lokal di bawah digunakan sebagai fallback penampil awal jika koneksi satu arah.
-                renderCatalog();
-            } catch (e) {
-                console.error("Gagal memuat data", e);
-            }
+      const API_URL =
+        "https://script.google.com/macros/s/AKfycbxzqVjkjLf5lNj6bcMN6ftDwR3P20Weq496VxWicNpHbCZCOvUf1fPMCXKLXZ4Dco2GAA/exec";
+      let products = [];
+      const $ = (id) => document.getElementById(id);
+      function rupiah(n) {
+        return new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0,
+        }).format(Number(n) || 0);
+      }
+      function status(msg, err = false) {
+        $("status").textContent = msg;
+        $("status").className = err ? "err" : "ok";
+      }
+      function render() {
+        const q = $("search").value.toLowerCase();
+        const rows = products.filter((p) =>
+          Object.values(p).join(" ").toLowerCase().includes(q),
+        );
+        $("tbody").innerHTML = rows.length
+          ? rows
+              .map(
+                (p) => `<tr>
+<td>${p.gambar ? `<img class="thumb" src="${esc(p.gambar)}" onerror="this.style.display='none'">` : "—"}</td>
+<td>${esc(p.id)}</td><td><b>${esc(p.nama)}</b></td><td><span class="badge">${esc(p.kategori)}</span></td>
+<td>${rupiah(p.hargaBeli)}</td><td>${rupiah(p.hargaJual)}</td><td class="profit">${rupiah(p.profit)}</td><td>${p.stok}</td>
+<td><div class="actions"><button class="light" onclick="openEdit('${escAttr(p.id)}')">Edit</button><button class="danger" onclick="removeProduct('${escAttr(p.id)}')">Hapus</button></div></td></tr>`,
+              )
+              .join("")
+          : '<tr><td colspan="9" class="empty">Tidak ada produk.</td></tr>';
+      }
+      function esc(s) {
+        return String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#039;",
+            })[c],
+        );
+      }
+      function escAttr(s) {
+        return String(s ?? "")
+          .replace(/\\/g, "\\\\")
+          .replace(/'/g, "\\'");
+      }
+      async function api(action, data = {}) {
+        const r = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action, ...data }),
+        });
+        const j = await r.json();
+        if (!j.ok) throw Error(j.message || "Terjadi kesalahan");
+        return j;
+      }
+      async function loadProducts() {
+        try {
+          status("Memuat data...");
+          const j = await fetch(API_URL);
+          const r = await j.json();
+          if (!r.ok) throw Error(r.message);
+          products = r.data || [];
+          render();
+          status(`${products.length} produk dimuat.`);
+        } catch (e) {
+          status(e.message, true);
+          render();
         }
-
-        function renderCatalog() {
-            const container = document.getElementById('catalog-container');
-            container.innerHTML = products.map(p => {
-                const profit = p.harga_jual - p.harga_beli;
-                const img = p.gambar_url || 'https://unsplash.com';
-                return `
-                    <div class="bg-white rounded-xl shadow-xs overflow-hidden product-card flex flex-col justify-between">
-                        <img src="${img}" alt="${p.nama_baju}">
-                        <div class="p-4 flex-1 flex flex-col justify-between">
-                            <div>
-                                <span class="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-sm">${p.kategori}</span>
-                                <h4 class="font-bold text-gray-800 text-lg mt-2">${p.nama_baju}</h4>
-                                <div class="text-sm text-gray-600 mt-2">
-                                    <p>Harga Jual: <span class="font-semibold text-green-600">Rp ${Number(p.harga_jual).toLocaleString('id-ID')}</span></p>
-                                    <p class="text-xs">Profit: Rp ${profit.toLocaleString('id-ID')}</p>
-                                    <p class="text-xs">Stok: ${p.stok} pcs</p>
-                                </div>
-                            </div>
-                            <div class="mt-4 flex gap-2">
-                                <button onclick="editProduct('${p.id}')" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-sm py-1.5 rounded-lg transition cursor-pointer text-center">Edit</button>
-                                <button onclick="deleteProduct('${p.id}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm py-1.5 rounded-lg transition cursor-pointer text-center">Hapus</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+      }
+      function openAdd() {
+        $("modalTitle").textContent = "Tambah Produk";
+        $("oldId").value = "";
+        ["id", "name", "category", "buy", "sell", "stock", "image"].forEach(
+          (x) => ($(x).value = ""),
+        );
+        $("modal").classList.add("show");
+      }
+      function openEdit(id) {
+        const p = products.find((x) => x.id === id);
+        if (!p) return;
+        $("modalTitle").textContent = "Edit Produk";
+        $("oldId").value = p.id;
+        $("id").value = p.id;
+        $("name").value = p.nama;
+        $("category").value = p.kategori;
+        $("buy").value = p.hargaBeli;
+        $("sell").value = p.hargaJual;
+        $("stock").value = p.stok;
+        $("image").value = p.gambar || "";
+        $("modal").classList.add("show");
+      }
+      function closeModal() {
+        $("modal").classList.remove("show");
+      }
+      async function save(e) {
+        e.preventDefault();
+        const data = {
+          id: $("id").value.trim(),
+          nama: $("name").value.trim(),
+          kategori: $("category").value.trim(),
+          hargaBeli: Number($("buy").value),
+          hargaJual: Number($("sell").value),
+          stok: Number($("stock").value),
+          gambar: $("image").value.trim(),
+        };
+        try {
+          status("Menyimpan...");
+          const oldId = $("oldId").value;
+          if (oldId) {
+            await api("update", { oldId, data });
+          } else {
+            await api("create", { data });
+          }
+          closeModal();
+          await loadProducts();
+        } catch (err) {
+          status(err.message, true);
         }
-
-        async function saveProduct(e) {
-            e.preventDefault();
-            const id = document.getElementById('prod-id').value || Date.now().toString();
-            const action = document.getElementById('prod-id').value ? 'update' : 'create';
-            
-            const productData = {
-                id: id,
-                nama_baju: document.getElementById('prod-name').value,
-                kategori: document.getElementById('prod-category').value,
-                harga_beli: Number(document.getElementById('prod-cost').value),
-                harga_jual: Number(document.getElementById('prod-price').value),
-                stok: Number(document.getElementById('prod-stock').value),
-                gambar_url: document.getElementById('prod-image').value
-            };
-
-            if(action === 'create') {
-                products.push(productData);
-            } else {
-                const idx = products.findIndex(p => p.id === id);
-                if(idx !== -1) products[idx] = productData;
-            }
-
-            renderCatalog();
-            closeModal();
-
-            // Kirim data secara asinkronus ke Google Sheets
-            await fetch(WEB_APP_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: action, data: productData })
-            });
+      }
+      async function removeProduct(id) {
+        const p = products.find((x) => x.id === id);
+        if (!p || !confirm(`Hapus produk "${p.nama}"?`)) return;
+        try {
+          status("Menghapus...");
+          await api("delete", { id });
+          await loadProducts();
+        } catch (e) {
+          status(e.message, true);
         }
-
-        async function deleteProduct(id) {
-            if(confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
-                products = products.filter(p => p.id !== id);
-                renderCatalog();
-                await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'delete', data: { id: id } })
-                });
-            }
-        }
-
-        function openModal() {
-            document.getElementById('product-form').reset();
-            document.getElementById('prod-id').value = '';
-            document.getElementById('modal-title').innerText = 'Tambah Produk Baju';
-            document.getElementById('product-modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('product-modal').classList.add('hidden');
-        }
-
-        function editProduct(id) {
-            const p = products.find(prod => prod.id === id);
-            if(!p) return;
-            document.getElementById('prod-id').value = p.id;
-            document.getElementById('prod-name').value = p.nama_baju;
-            document.getElementById('prod-category').value = p.kategori;
-            document.getElementById('prod-cost').value = p.harga_beli;
-            document.getElementById('prod-price').value = p.harga_jual;
-            document.getElementById('prod-stock').value = p.stok;
-            document.getElementById('prod-image').value = p.gambar_url;
-            
-            document.getElementById('modal-title').innerText = 'Edit Produk Baju';
-            document.getElementById('product-modal').classList.remove('hidden');
-        }
-
-        // Jalankan fetch saat pertama kali load
-        fetchProducts();
+      }
+      loadProducts();
     </script>
-</body>
+  </body>
 </html>
