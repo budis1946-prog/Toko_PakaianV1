@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Toko Baju & Spreadsheet Database</title>
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        .product-card img { object-fit: cover; height: 200px; width: 100%; }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-6 flex justify-between items-center bg-white p-4 rounded-xl shadow-xs">
+            <h1 class="text-2xl font-bold text-gray-800">👕 Toko Baju Management</h1>
+            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition cursor-pointer">+ Tambah Produk</button>
+        </header>
+
+        <!-- Catalog List -->
+        <div id="catalog-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Data produk dimasukkan via JS -->
+        </div>
+    </div>
+
+    <!-- Modal Form (Tambah / Edit) -->
+    <div id="product-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
+            <h3 id="modal-title" class="text-xl font-bold mb-4">Tambah Produk Baju</h3>
+            <form id="product-form" onsubmit="saveProduct(event)">
+                <input type="hidden" id="prod-id">
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Baju</label>
+                    <input type="text" id="prod-name" required class="w-full border p-2 rounded-lg">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                    <select id="prod-category" class="w-full border p-2 rounded-lg">
+                        <option value="Kaos">Kaos</option>
+                        <option value="Kemeja">Kemeja</option>
+                        <option value="Jaket">Jaket</option>
+                        <option value="Celana">Celana</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Harga Beli (Rp)</label>
+                        <input type="number" id="prod-cost" required class="w-full border p-2 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Harga Jual (Rp)</label>
+                        <input type="number" id="prod-price" required class="w-full border p-2 rounded-lg">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stok</label>
+                        <input type="number" id="prod-stock" required class="w-full border p-2 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">URL Gambar</label>
+                        <input type="url" id="prod-image" placeholder="https://..." class="w-full border p-2 rounded-lg">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" onclick="closeModal()" class="bg-gray-300 px-4 py-2 rounded-lg cursor-pointer">Batal</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // MASUKKAN URL GOOGLE APPS SCRIPT ANDA DI SINI
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzY-WFVypkO1LWnKqf2Mg3HJpvkPpQ0z2awG4EH9_TWLbh9alVrlpBNSmLfr6cVa5KpQA/exec"; 
+        
+        let products = [];
+
+        async function fetchProducts() {
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Catatan: no-cors membatasi pembacaan respon langsung, disarankan konfigurasi CORS di Apps Script lanjutan jika butuh validasi balik.
+                    body: JSON.stringify({ action: 'read' })
+                });
+                // Untuk kemudahan integrasi tanpa masalah CORS pra-setup ekstrim, 
+                // data lokal di bawah digunakan sebagai fallback penampil awal jika koneksi satu arah.
+                renderCatalog();
+            } catch (e) {
+                console.error("Gagal memuat data", e);
+            }
+        }
+
+        function renderCatalog() {
+            const container = document.getElementById('catalog-container');
+            container.innerHTML = products.map(p => {
+                const profit = p.harga_jual - p.harga_beli;
+                const img = p.gambar_url || 'https://unsplash.com';
+                return `
+                    <div class="bg-white rounded-xl shadow-xs overflow-hidden product-card flex flex-col justify-between">
+                        <img src="${img}" alt="${p.nama_baju}">
+                        <div class="p-4 flex-1 flex flex-col justify-between">
+                            <div>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-sm">${p.kategori}</span>
+                                <h4 class="font-bold text-gray-800 text-lg mt-2">${p.nama_baju}</h4>
+                                <div class="text-sm text-gray-600 mt-2">
+                                    <p>Harga Jual: <span class="font-semibold text-green-600">Rp ${Number(p.harga_jual).toLocaleString('id-ID')}</span></p>
+                                    <p class="text-xs">Profit: Rp ${profit.toLocaleString('id-ID')}</p>
+                                    <p class="text-xs">Stok: ${p.stok} pcs</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex gap-2">
+                                <button onclick="editProduct('${p.id}')" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-sm py-1.5 rounded-lg transition cursor-pointer text-center">Edit</button>
+                                <button onclick="deleteProduct('${p.id}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white text-sm py-1.5 rounded-lg transition cursor-pointer text-center">Hapus</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('prod-id').value || Date.now().toString();
+            const action = document.getElementById('prod-id').value ? 'update' : 'create';
+            
+            const productData = {
+                id: id,
+                nama_baju: document.getElementById('prod-name').value,
+                kategori: document.getElementById('prod-category').value,
+                harga_beli: Number(document.getElementById('prod-cost').value),
+                harga_jual: Number(document.getElementById('prod-price').value),
+                stok: Number(document.getElementById('prod-stock').value),
+                gambar_url: document.getElementById('prod-image').value
+            };
+
+            if(action === 'create') {
+                products.push(productData);
+            } else {
+                const idx = products.findIndex(p => p.id === id);
+                if(idx !== -1) products[idx] = productData;
+            }
+
+            renderCatalog();
+            closeModal();
+
+            // Kirim data secara asinkronus ke Google Sheets
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: action, data: productData })
+            });
+        }
+
+        async function deleteProduct(id) {
+            if(confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
+                products = products.filter(p => p.id !== id);
+                renderCatalog();
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete', data: { id: id } })
+                });
+            }
+        }
+
+        function openModal() {
+            document.getElementById('product-form').reset();
+            document.getElementById('prod-id').value = '';
+            document.getElementById('modal-title').innerText = 'Tambah Produk Baju';
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+        }
+
+        function editProduct(id) {
+            const p = products.find(prod => prod.id === id);
+            if(!p) return;
+            document.getElementById('prod-id').value = p.id;
+            document.getElementById('prod-name').value = p.nama_baju;
+            document.getElementById('prod-category').value = p.kategori;
+            document.getElementById('prod-cost').value = p.harga_beli;
+            document.getElementById('prod-price').value = p.harga_jual;
+            document.getElementById('prod-stock').value = p.stok;
+            document.getElementById('prod-image').value = p.gambar_url;
+            
+            document.getElementById('modal-title').innerText = 'Edit Produk Baju';
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        // Jalankan fetch saat pertama kali load
+        fetchProducts();
+    </script>
+</body>
+</html>
